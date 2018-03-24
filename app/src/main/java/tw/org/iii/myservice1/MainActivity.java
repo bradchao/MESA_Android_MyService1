@@ -97,12 +97,16 @@ public class MainActivity extends AppCompatActivity {
     public void test1(View view) {
         Intent it = new Intent(this, PlayService.class);
         it.putExtra("song", songFile);
+        it.putExtra("play", true);
         startService(it);
     }
     public void test2(View view) {
-
+        Intent it = new Intent(this, PlayService.class);
+        it.putExtra("play", false);
+        startService(it);
     }
     public void test3(View view) {
-
+        Intent it = new Intent(this, PlayService.class);
+        stopService(it);
     }
 }
