@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="tw.org.iii.myservice1">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -20,6 +21,10 @@
 
         <service
             android:name=".MyService"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".PlayService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

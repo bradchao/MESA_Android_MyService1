@@ -3,7 +3,10 @@ package tw.org.iii.myservice1;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -16,6 +19,7 @@ import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     private File sdroot;
+    private String songFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,20 +50,54 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init(){
-        sdroot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-        Log.v("brad", sdroot.getAbsolutePath());
+//        sdroot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+//        Log.v("brad", sdroot.getAbsolutePath());
+//
+//        File[] musics = sdroot.listFiles();
+//        for (File music : musics){
+//            Log.v("brad", music.getAbsolutePath());
+//        }
 
-        File[] musics = sdroot.listFiles();
-        for (File music : musics){
-            Log.v("brad", music.getAbsolutePath());
+
+
+        String[] fileds = {
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.DURATION,
+                MediaStore.Audio.Media.ALBUM
+                };
+
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor cursor = getContentResolver().query(uri,
+                null,null,null,null);
+        while (cursor.moveToNext()){
+            String data =
+                    cursor.getString(
+                            cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+
+            String title =
+                    cursor.getString(
+                            cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+
+            String artist =
+                    cursor.getString(
+                            cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+
+            Log.v("brad", title +":"+artist+":"+data);
+
+            songFile = data;
+
         }
+
+
 
 
 
     }
 
     public void test1(View view) {
-
+        Intent it = new Intent(this, PlayService.class);
+        it.putExtra("song", songFile);
+        startService(it);
     }
     public void test2(View view) {
 
