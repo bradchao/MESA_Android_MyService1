@@ -1,7 +1,10 @@
 package tw.org.iii.myservice1;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -15,11 +18,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
+
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     private File sdroot;
     private String songFile;
+    private DiscreteSeekBar seekBar;
+    private MyReceiver myReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +95,75 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        seekBar = findViewById(R.id.seekBar);
+        seekBar.setMin(0);
+        seekBar.setNumericTransformer(new DiscreteSeekBar.NumericTransformer() {
+            @Override
+            public int transform(int value) {
+                return value / 1000;
+            }
+        });
+        seekBar.setOnProgressChangeListener(new DiscreteSeekBar.OnProgressChangeListener() {
+            @Override
+            public void onProgressChanged(DiscreteSeekBar seekBar, int value,
+                                          boolean fromUser) {
+                if (fromUser){
+                    Log.v("brad", "value:" + value);
+
+                    Intent it = new Intent(MainActivity.this, PlayService.class);
+                    it.putExtra("seekTo", value);
+                    startService(it);
 
 
+                }
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(DiscreteSeekBar seekBar) {
+                //Log.v("brad", "onStartTrackingTouch");
+            }
+
+            @Override
+            public void onStopTrackingTouch(DiscreteSeekBar seekBar) {
+                //Log.v("brad", "onStopTrackingTouch");
+            }
+        });
+
+
+
+
+        myReceiver = new MyReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("brad");
+        registerReceiver(myReceiver,filter);
 
 
     }
+
+    @Override
+    public void finish() {
+        unregisterReceiver(myReceiver);
+        super.finish();
+    }
+
+    private class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int len = intent.getIntExtra("len", -1);
+            int now = intent.getIntExtra("now", -1);
+            if (len >= 0){
+                seekBar.setMax(len);
+                Log.v("brad", "receive:" + len);
+            }
+            if (now >= 0){
+                seekBar.setProgress(now);
+            }
+
+        }
+    }
+
+
 
     public void test1(View view) {
         Intent it = new Intent(this, PlayService.class);

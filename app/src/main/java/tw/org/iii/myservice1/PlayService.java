@@ -7,11 +7,14 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PlayService extends Service {
     private MediaPlayer mediaPlayer;
     private String song;
     private boolean isPrepared;
+    private Timer timer;
 
     public PlayService() {
     }
@@ -27,6 +30,8 @@ public class PlayService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        timer = new Timer();
+        timer.schedule(new MyTask(), 0, 500);
         mediaPlayer = new MediaPlayer();
         isPrepared = false;
     }
@@ -35,25 +40,56 @@ public class PlayService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         song = intent.getStringExtra("song");
         boolean isPlay = intent.getBooleanExtra("play", false);
+        int seekTo = intent.getIntExtra("seekTo", -1);
 
         if (!isPrepared){
             try{
                 mediaPlayer.setDataSource(song);
                 mediaPlayer.prepare();
                 isPrepared = true;
+
+
+                int len = mediaPlayer.getDuration();
+                //Log.v("brad", "len = " + len);
+
+                Intent it = new Intent("brad");
+                it.putExtra("len", len);
+                sendBroadcast(it);
+
+
             }catch (Exception e){
             }
         }
 
-        if (isPrepared && isPlay){
-            mediaPlayer.start();
-        }else{
-            mediaPlayer.pause();
+        if (isPrepared && seekTo >= 0){
+            mediaPlayer.seekTo(seekTo);
+        }else {
+            if (isPrepared && isPlay) {
+                mediaPlayer.start();
+            } else {
+                mediaPlayer.pause();
+            }
         }
 
 
         return super.onStartCommand(intent, flags, startId);
     }
+
+    private class MyTask extends TimerTask {
+        @Override
+        public void run() {
+            if (mediaPlayer!=null && mediaPlayer.isPlaying()) {
+                int now = mediaPlayer.getCurrentPosition();
+                //Log.v("brad", "now = " + now);
+
+                Intent it = new Intent("brad");
+                it.putExtra("now", now);
+                sendBroadcast(it);
+
+            }
+        }
+    }
+
 
     @Override
     public void onDestroy() {
@@ -61,6 +97,12 @@ public class PlayService extends Service {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
+        }
+
+        if (timer != null){
+            timer.cancel();
+            timer.purge();
+            timer = null;
         }
 
         super.onDestroy();
